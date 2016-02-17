@@ -1,0 +1,134 @@
+<script type="text/x-red" data-template-name="denon-controller">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-host"><i class="icon-bookmark"></i> denon Host</label>
+        <input type="text" id="node-config-input-host">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-port"><i class="icon-bookmark"></i> denon Port</label>
+        <input type="text" id="node-config-input-port">
+    </div>
+</script>
+
+<script type="text/x-red" data-template-name="denon-out">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-controller"><i class="icon-bookmark"></i> Denon host</label>
+        <input type="text" id="node-input-controller">
+    </div>
+    <div class="form-row">
+        <label for="node-input-denoncommand"><i class="icon-bookmark"></i> Command</label>
+        <input type="text" id="node-input-denoncommand">
+    </div>
+</script>
+
+<script type="text/x-red" data-template-name="denon-in">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    	<div class="form-row">
+        <label for="node-input-controller"><i class="icon-bookmark"></i> Controller</label>
+        <input type="text" id="node-input-controller">
+    </div>
+
+
+</script>
+
+<script type="text/x-red" data-help-name="denon-out">
+    <p>
+        Use this to <b>send</b> JSON RPC commands to a Denon player.<br/>
+    	<b>msg.payload</b> must be a JavaScript object or a string
+    </p>
+    <p>
+        For example, simple string (command does not hav arguments): <code>Input.Home</code><br/>
+        Or Javascript object (command + parameters):
+<pre>{
+    "cmd": "Player.Stop",
+    "args" :{
+        "playerid": 0
+    }
+}</pre>
+    </p>
+    <p>Look at official Denon's JSON-RPC API: <a href="http://denon.wiki/view/JSON-RPC_API/v6" target="_blank">http://denon.wiki/view/JSON-RPC_API/v6</a></p>
+</script>
+
+<script type="text/x-red" data-help-name="denon-in">
+    <p>
+        Use this to <b>inject</b> flows from Denon player<br/>
+        Denon notification being injected as a Javascript object, for example:
+<pre>{
+    "data": {
+        "data": {
+            "item": {
+                "title": "Lounge FM Terrace ()",
+                "type": "song"
+            },
+            "playlistid": 0,
+            "position": 0
+        },
+        "sender": "xbmc"
+    },
+    "notification": "Playlist.OnAdd"
+}</pre>
+    </p>
+    <p>Read more about official Denon's JSON-RPC api here: http://denon.wiki/view/JSON-RPC_API/v6</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('denon-controller', {
+        category: 'config',
+        defaults: {
+            name: {value: ""},
+            host: {value: "127.0.0.1", required: true},
+            port: {value: 23, required: false, validate: RED.validators.number()}
+        },
+        label: function () {
+            return (this.name || 'denon' ) + "@" + this.host + ":" + this.port;
+        }
+    });
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('denon-out', {
+        category: 'output',
+        color: '#26b050',
+        defaults: {
+            name: {value: ""},
+            controller: {value: "", type: "denon-controller"},
+            unit_number: {value: "1", required: false},
+            output: {value: "1", required: false},
+            denoncommand: {value: ""}
+        },
+        inputs: 1,
+        outputs: 0,
+        align: 'right',
+        icon: "bridge-dash.png",
+        label: function () {
+            return (this.groupaddr || this.name || "denon");
+        }
+    });
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('denon-in', {
+        category: 'input',
+        color: '#26b050',
+        defaults: {
+            name: {value: ""},
+            controller: {value: "", type: "denon-controller"}
+        },
+        inputs: 0,
+        outputs: 1,
+        icon: "bridge-dash.png",
+        label: function () {
+            return (this.groupaddr || this.name || "denon");
+        }
+    });
+</script>
