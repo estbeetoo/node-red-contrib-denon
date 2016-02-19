@@ -23,8 +23,8 @@ module.exports = function (RED) {
         var node = this;
 
         /**
-         * Initialize an denonjs socket, calling the handler function
-         * when successfully connected, passing it the denonjs connection
+         * Initialize an denon_telnet socket, calling the handler function
+         * when successfully connected, passing it the denon_telnet connection
          */
         this.initializeDenonConnection = function (handler) {
             if (node.denon) {
@@ -33,12 +33,16 @@ module.exports = function (RED) {
                     msg: 'already configured connection to Denon player at ' + config.host + ':' + config.port
                 });
                 if (handler && (typeof handler === 'function')) {
-                    if (node.denon.connection)
+                    if (node.denon.connection && node.denon.connected)
                         handler(node.denon);
-                    else
+                    else {
+                        if (node.denon.connection && !node.denon.connected)
+                            node.denon.connect();
                         node.denon.on('connected', function () {
                             handler(node.denon);
                         });
+
+                    }
                 }
                 return node.denon;
             }
@@ -48,12 +52,12 @@ module.exports = function (RED) {
                 port: config.port,
                 debug: DEBUG
             });
+            node.denon.connect();
             if (handler && (typeof handler === 'function')) {
                 node.denon.on('connected', function () {
                     handler(node.denon);
                 });
             }
-            node.denon.connect();
             DEBUG && RED.comms.publish("debug", {
                 name: node.name,
                 msg: 'Denon: successfully connected to ' + config.host + ':' + config.port
@@ -62,7 +66,7 @@ module.exports = function (RED) {
             return node.denon;
         };
         this.on("close", function () {
-            node.log('disconnecting from denonjs server at ' + config.host + ':' + config.port);
+            node.log('disconnecting from denon device at ' + config.host + ':' + config.port);
             node.denon && node.denon.disconnect && node.denon.disconnect();
             node.denon = null;
         });
@@ -93,6 +97,7 @@ module.exports = function (RED) {
             //node.log('denonout.onInput msg[' + util.inspect(msg) + ']');
             if (!(msg && msg.hasOwnProperty('payload'))) return;
             var payload = msg.payload;
+            console.log('------------- ' + JSON.stringify(msg) + '');
             if (typeof(msg.payload) === "object") {
                 payload = msg.payload;
             } else if (typeof(msg.payload) === "string") {
@@ -111,9 +116,9 @@ module.exports = function (RED) {
 
             //If msg.topic is filled, than set it as cmd
             if (msg.topic) {
-                if(payload.value===null || payload.value===undefined)
+                if (payload.value === null || payload.value === undefined)
                     payload.value = payload.cmd;
-                payload.cmd = msg.topic.toString();
+                payload = {cmd: msg.topic.toString(), value: payload.value};
             }
 
             if (node.denoncommand && node.denoncommand !== 'empty') {
@@ -174,19 +179,33 @@ module.exports = function (RED) {
 
         this.send = function (data, callback) {
             DEBUG && RED.comms.publish("debug", {name: node.name, msg: 'send data[' + JSON.stringify(data) + ']'});
-            //node.log('send data[' + data + ']');
-            // init a new one-off connection from the effectively singleton DenonController
-            // there seems to be no way to reuse the outgoing conn in adreek/node-denonjs
             controllerNode.initializeDenonConnection(function (fsm) {
                 try {
                     DEBUG && RED.comms.publish("debug", {name: node.name, msg: "send:  " + JSON.stringify(data)});
                     data.cmd = data.cmd || data.method;
-                    data.args = data.args || data.params;
-                    fsm.connection.run(data.cmd, data.args).then(function () {
-                        callback && callback(err);
-                    }, function (err) {
-                        callback && callback(err);
-                    });
+                    data.value = data.value || data.params;
+
+                    switch (data.cmd.toLowerCase()) {
+                        case 'setvolumedb':
+                            fsm.connection.setVolumeDb(parseFloat(data.value), function (error, response) {
+                                if (!callback)
+                                    return;
+                                if (error)
+                                    callback && callback(error, response);
+                                else
+                                    callback(response);
+                            });
+                            break;
+                        default:
+                            fsm.connection.send(data.cmd, function (error, response) {
+                                if (!callback)
+                                    return;
+                                if (error)
+                                    callback && callback(error, response);
+                                else
+                                    callback(response);
+                            });
+                    }
                 }
                 catch (err) {
                     node.error('error calling send: ' + err);
@@ -230,18 +249,6 @@ module.exports = function (RED) {
             node.status({fill: "yellow", shape: "ring", text: "reconnecting"});
         }
 
-        function bindNotificationListeners(connection) {
-            function getListenerForNotification(notification) {
-                return function (data) {
-                    node.receiveNotification(notification, data);
-                }
-            }
-
-            Object.keys(connection.schema.schema.notifications).forEach(function (method) {
-                connection.schema.schema.notifications[method](getListenerForNotification(method));
-            });
-        }
-
         node.receiveNotification = function (notification, data) {
             DEBUG && RED.comms.publish("debug", {
                 name: node.name,
@@ -257,8 +264,6 @@ module.exports = function (RED) {
         };
 
         controllerNode.initializeDenonConnection(function (fsm) {
-            bindNotificationListeners(fsm.connection);
-
             if (fsm.connected)
                 nodeStatusConnected();
             else

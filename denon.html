@@ -4,11 +4,11 @@
         <input type="text" id="node-config-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-config-input-host"><i class="icon-bookmark"></i> denon Host</label>
+        <label for="node-config-input-host"><i class="icon-bookmark"></i> Denon Host</label>
         <input type="text" id="node-config-input-host">
     </div>
     <div class="form-row">
-        <label for="node-config-input-port"><i class="icon-bookmark"></i> denon Port</label>
+        <label for="node-config-input-port"><i class="icon-bookmark"></i> Denon Port</label>
         <input type="text" id="node-config-input-port">
     </div>
 </script>
@@ -43,20 +43,43 @@
 
 <script type="text/x-red" data-help-name="denon-out">
     <p>
-        Use this to <b>send</b> JSON RPC commands to a Denon player.<br/>
+        Use this to <b>send</b> commands to a Denon AVRs.<br/>
     	<b>msg.payload</b> must be a JavaScript object or a string
     </p>
     <p>
-        For example, simple string (command does not hav arguments): <code>Input.Home</code><br/>
-        Or Javascript object (command + parameters):
+        For example, simple string (command does not has arguments): <code>PWON</code>
+    </p>
+    <p>
+        If topic if filled, it will be handled as command nad payload will be an argument, for example msg object may contain fields:<br/>
 <pre>{
-    "cmd": "Player.Stop",
-    "args" :{
-        "playerid": 0
-    }
+    "topic": "SetVolumeDB",
+    "payload" : -60.5
 }</pre>
     </p>
-    <p>Look at official Denon's JSON-RPC API: <a href="http://denon.wiki/view/JSON-RPC_API/v6" target="_blank">http://denon.wiki/view/JSON-RPC_API/v6</a></p>
+        Or Javascript object (command + parameters):
+<pre>{
+    "cmd": "SetVolumeDB",
+    "args" :{
+        "volume": 0
+    }</pre>
+    <p>
+        <h2>Supported commands:</h2>
+        <ul>
+            <li>All from official <a href="https://github.com/estbeetoo/node-red-contrib-denon/blob/master/doc/AVR3312CI_AVR3312_PROTOCOL_V7.6.0.pdf">Denon AVR protocol</a></li>
+            <li>
+                SetVolumeDB<br/>
+                Params:
+                <code>volume</code>:
+                <ul>
+                    <li>type: <b>float</b></li>
+                    <li>range: from <b>-80.0</b> to <b>+1.0</b></li>
+                </ul>
+            </li>
+        </ul>
+    </p>
+}</pre>
+    </p>
+    <p>Take a look at Denon AVR protocol: <a href="https://github.com/estbeetoo/node-red-contrib-denon/blob/master/doc/AVR3312CI_AVR3312_PROTOCOL_V7.6.0.pdf">DENON_PROTOCOL_V7.6.0.pdf</a></p
 </script>
 
 <script type="text/x-red" data-help-name="denon-in">
@@ -64,21 +87,10 @@
         Use this to <b>inject</b> flows from Denon player<br/>
         Denon notification being injected as a Javascript object, for example:
 <pre>{
-    "data": {
-        "data": {
-            "item": {
-                "title": "Lounge FM Terrace ()",
-                "type": "song"
-            },
-            "playlistid": 0,
-            "position": 0
-        },
-        "sender": "xbmc"
-    },
-    "notification": "Playlist.OnAdd"
+    //TODO: fill it
 }</pre>
     </p>
-    <p>Read more about official Denon's JSON-RPC api here: http://denon.wiki/view/JSON-RPC_API/v6</p>
+    <p>Take a look at Denon AVR protocol: <a href="https://github.com/estbeetoo/node-red-contrib-denon/blob/master/doc/AVR3312CI_AVR3312_PROTOCOL_V7.6.0.pdf">DENON_PROTOCOL_V7.6.0.pdf</a></p>
 </script>
 
 <script type="text/javascript">
@@ -109,7 +121,7 @@
         inputs: 1,
         outputs: 0,
         align: 'right',
-        icon: "bridge-dash.png",
+        icon: "denon.png",
         label: function () {
             return (this.groupaddr || this.name || "denon");
         }
@@ -126,7 +138,7 @@
         },
         inputs: 0,
         outputs: 1,
-        icon: "bridge-dash.png",
+        icon: "denon.png",
         label: function () {
             return (this.groupaddr || this.name || "denon");
         }
