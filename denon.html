@@ -43,11 +43,11 @@
 
 <script type="text/x-red" data-help-name="denon-out">
     <p>
-        Use this to <b>send</b> commands to a Denon AVRs.<br/>
+        Use this node to <b>send</b> commands to a Denon AVRs.<br/>
     	<b>msg.payload</b> must be a JavaScript object or a string
     </p>
     <p>
-        For example, simple string (command does not has arguments): <code>PWON</code>
+        For example, simple string (command does not has arguments): <code>PWON</code> or <code>PWOFF</code>
     </p>
     <p>
         If topic if filled, it will be handled as command nad payload will be an argument, for example msg object may contain fields:<br/>
@@ -56,12 +56,11 @@
     "payload" : -60.5
 }</pre>
     </p>
-        Or Javascript object (command + parameters):
+        Or Javascript object (command + params):
 <pre>{
     "cmd": "SetVolumeDB",
-    "args" :{
-        "volume": 0
-    }</pre>
+    "params": 0
+}</pre>
     <p>
         <h2>Supported commands:</h2>
         <ul>
@@ -84,13 +83,14 @@
 
 <script type="text/x-red" data-help-name="denon-in">
     <p>
-        Use this to <b>inject</b> flows from Denon player<br/>
-        Denon notification being injected as a Javascript object, for example:
-<pre>{
-    //TODO: fill it
+        Use this node to <b>receive</b> data from Denon devices and inject it into the flow.<br/>
+        Denon data being injected as a Javascript object of structure:
+        <pre>{
+    topic: 'denon',
+    payload: 'PWON'
 }</pre>
     </p>
-    <p>Take a look at Denon AVR protocol: <a href="https://github.com/estbeetoo/node-red-contrib-denon/blob/master/doc/AVR3312CI_AVR3312_PROTOCOL_V7.6.0.pdf">DENON_PROTOCOL_V7.6.0.pdf</a></p>
+    <p>Take a look at Denon AVR protocol for full list of device response: <a href="https://github.com/estbeetoo/node-red-contrib-denon/blob/master/doc/AVR3312CI_AVR3312_PROTOCOL_V7.6.0.pdf">DENON_PROTOCOL_V7.6.0.pdf</a></p>
 </script>
 
 <script type="text/javascript">
