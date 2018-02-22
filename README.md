@@ -13,7 +13,7 @@ Run command on Node-RED installation directory
 # Usage
 -----
 
-![node-red-denon-flow] (example.png)
+![node-red-denon-flow] (https://raw.githubusercontent.com/estbeetoo/node-red-contrib-denon/master/example.png)
 
 If you want to use this node simply inject message's payload as string:
 
@@ -69,13 +69,19 @@ where `notification` could be `PWON` and `data` contain additional info, argumen
 Current package use debug package: https://www.npmjs.com/package/debug.
 Run you `node-red` with command to enable debug output:
 
-`set DEBUG=node-red-contrib-denon node-red`
+```
+set DEBUG=node-red-contrib-denon
+node-red
+```
 
 for globally installed Node-RED, or
 
-`set DEBUG=node-red-contrib-denon node node-red/red.js` 
-
+```
+set DEBUG=node-red-contrib-denon
+node node-red/red.js
+```
 for local Node-RED.
+Highly recommend to use (cross-env)[https://www.npmjs.com/package/cross-env] package to set enviromnent variables in cross OS way.
 
 # Additinal documentation
 
