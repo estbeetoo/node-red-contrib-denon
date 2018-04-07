@@ -119,12 +119,12 @@ module.exports = function (RED) {
                 }
             }
 
-            node.send(payload, function (err) {
+            node.sendToDenon(payload, function (err, data) {
                 if (err) {
-                    node.error('send error: ' + err);
+                    node.error(`send error: ${err}`);
                 }
                 if (typeof(msg.cb) === 'function')
-                    msg.cb(err);
+                    msg.cb(err, data);
             });
 
         });
@@ -165,7 +165,7 @@ module.exports = function (RED) {
             fsm.on('reconnect', nodeStatusReconnect);
         });
 
-        this.send = function (data, callback) {
+        this.sendToDenon = function (data, callback) {
             debug(`${node.name}: send data[${JSON.stringify(data)}`);
             controllerNode.initializeDenonConnection(function (fsm) {
                 try {
@@ -177,9 +177,9 @@ module.exports = function (RED) {
                                 if (!callback)
                                     return;
                                 if (error)
-                                    callback && callback(error, response);
+                                    callback(error, response);
                                 else
-                                    callback(response);
+                                    callback(null, response);
                             });
                             break;
                         default:
@@ -187,15 +187,15 @@ module.exports = function (RED) {
                                 if (!callback)
                                     return;
                                 if (error)
-                                    callback && callback(error, response);
+                                    callback(error, response);
                                 else
-                                    callback(response);
+                                    callback(null, response);
                             });
                     }
                 }
                 catch (err) {
                     node.error('error calling send: ' + err);
-                    callback(err);
+                    callback && callback(err);
                 }
             });
         }
